@@ -1,0 +1,146 @@
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Camera, ShoppingBag, Users, DollarSign, Truck, AlertCircle, Share2 } from 'lucide-react'
+
+const ProductCard = ({ product, isPublic = false, onTogglePublic }) => (
+  <Card className="w-full max-w-[350px] mx-auto">
+    <CardHeader>
+      <CardTitle className="text-lg">{product.name}</CardTitle>
+      {!isPublic && <CardDescription>From {product.seller}</CardDescription>}
+    </CardHeader>
+    <CardContent>
+      <img src={product.image || "/api/placeholder/350/200"} alt={product.name} className="w-full h-[200px] object-cover mb-4 rounded" />
+      <div className="flex justify-between items-center">
+        <span>Price: ${product.price}</span>
+        {!isPublic && <span>Quantity: {product.quantity}</span>}
+      </div>
+      {product.description && <p className="mt-2 text-sm">{product.description}</p>}
+      {!isPublic && (
+        <div className="mt-4 flex items-center space-x-2">
+          <Checkbox 
+            id={`public-${product.id}`} 
+            checked={product.isPublic} 
+            onCheckedChange={() => onTogglePublic(product.id)}
+          />
+          <Label htmlFor={`public-${product.id}`}>Show in public catalog</Label>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+)
+
+const PublicCatalog = ({ products }) => (
+  <div className="container mx-auto p-4">
+    <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Mama Joyce Handbag Collection</h1>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {products.filter(p => p.isPublic).map(product => (
+        <ProductCard key={product.id} product={product} isPublic={true} />
+      ))}
+    </div>
+  </div>
+)
+
+const MamaJoyceApp = () => {
+  const [products, setProducts] = useState([
+    { id: 1, name: "Leather Tote", seller: "LuxeBags", price: 150, quantity: 5, image: "/api/placeholder/350/200", description: "Elegant leather tote, perfect for everyday use.", isPublic: true },
+    { id: 2, name: "Crossbody Bag", seller: "ChicAccessories", price: 80, quantity: 8, image: "/api/placeholder/350/200", description: "Versatile crossbody bag with adjustable strap.", isPublic: false },
+  ]);
+
+  const [showPublicCatalog, setShowPublicCatalog] = useState(false);
+  const [publicLink, setPublicLink] = useState("");
+
+  const generatePublicLink = () => {
+    const link = `https://mamajoycehandbags.com/catalog/${Math.random().toString(36).substr(2, 9)}`;
+    setPublicLink(link);
+  }
+
+  const toggleProductPublic = (productId) => {
+    setProducts(products.map(p => 
+      p.id === productId ? {...p, isPublic: !p.isPublic} : p
+    ));
+  }
+
+  if (showPublicCatalog) {
+    return (
+      <div>
+        <PublicCatalog products={products} />
+        <Button onClick={() => setShowPublicCatalog(false)} className="mt-4 mx-auto block">
+          Back to Admin View
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Mama Joyce Handbag Management</h1>
+      
+      <Tabs defaultValue="inventory" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+          <TabsTrigger value="inventory"><ShoppingBag className="mr-2" /><span className="hidden sm:inline">Inventory</span></TabsTrigger>
+          <TabsTrigger value="suppliers"><Truck className="mr-2" /><span className="hidden sm:inline">Suppliers</span></TabsTrigger>
+          <TabsTrigger value="customers"><Users className="mr-2" /><span className="hidden sm:inline">Customers</span></TabsTrigger>
+          <TabsTrigger value="sales"><DollarSign className="mr-2" /><span className="hidden sm:inline">Sales</span></TabsTrigger>
+          <TabsTrigger value="alerts"><AlertCircle className="mr-2" /><span className="hidden sm:inline">Alerts</span></TabsTrigger>
+          <TabsTrigger value="share"><Share2 className="mr-2" /><span className="hidden sm:inline">Share</span></TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="inventory">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {products.map(product => (
+              <ProductCard key={product.id} product={product} onTogglePublic={toggleProductPublic} />
+            ))}
+          </div>
+          <Button className="mt-4">Add New Product</Button>
+        </TabsContent>
+
+        <TabsContent value="suppliers">
+          <h2 className="text-xl sm:text-2xl mb-4">Supplier Management</h2>
+          {/* Supplier management content */}
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <h2 className="text-xl sm:text-2xl mb-4">Customer Database</h2>
+          {/* Customer database content */}
+        </TabsContent>
+
+        <TabsContent value="sales">
+          <h2 className="text-xl sm:text-2xl mb-4">Sales Tracking</h2>
+          {/* Sales tracking content */}
+        </TabsContent>
+
+        <TabsContent value="alerts">
+          <h2 className="text-xl sm:text-2xl mb-4">Reorder Alerts</h2>
+          {/* Reorder alerts content */}
+        </TabsContent>
+
+        <TabsContent value="share">
+          <h2 className="text-xl sm:text-2xl mb-4">Share Product Catalog</h2>
+          <Button onClick={generatePublicLink} className="mb-4">Generate Shareable Link</Button>
+          {publicLink && (
+            <div>
+              <p>Share this link with your customers:</p>
+              <Input value={publicLink} readOnly className="mt-2" />
+              <Button onClick={() => setShowPublicCatalog(true)} className="mt-4">Preview Public Catalog</Button>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default MamaJoyceApp;
+
+{
+ "homepage": "https://github.com/joyce1gh/MamaJ.git>",
+ "scripts": {
+   "predeploy": "npm run build",
+   "deploy": "gh-pages -d build"
+ }
+}
